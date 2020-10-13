@@ -20,10 +20,13 @@
           <el-col :span="5">
             <div id="appd">
               <el-button-group id="ccc">
-                <el-button type="primary" icon="el-icon-arrow-left">上一页</el-button>
-                <el-button type="primary">下一页<i class="el-icon-arrow-right el-icon--right"></i>
+                <el-button :disabled="frontButton" type="primary" icon="el-icon-arrow-left" @click="front">上一页</el-button>
+                <el-button :disabled="nextButton" type="primary" @click="next">下一页<i class="el-icon-arrow-right el-icon--right"></i>
               </el-button-group>
             </div>
+          </el-col>
+          <el-col :span="2">
+            <el-button type="primary" icon="el-icon-check" @click="upload">提交</el-button>
           </el-col>
         </el-row>
       </el-header>
@@ -39,6 +42,8 @@
             :titles="flt_titles">
           </el-transfer>
         </div>
+        <div id="mapMain"><h1>mapMain</h1></div>
+        <div id="showMain"><h1>showMain</h1></div>
       </el-main>
     </el-container>
   </div>
@@ -64,8 +69,70 @@
           });
           return d;
         })(),
-        value: []
-      }
+        value: [],
+        active: 0,
+        frontButton: true,
+        nextButton: false
+      },
+      methods: {
+        next: function(){
+          var a = document.getElementById("fltMain");
+          var b = document.getElementById("mapMain");
+          var c = document.getElementById("showMain");
+
+          b.style.visibility="visible";
+          c.style.visibility="visible";
+
+          if(a.style.display==""){
+            a.style.display="none";
+            b.style.display="";
+            c.style.display="none";
+          }else if(b.style.display==""){
+            a.style.display="none";
+            b.style.display="none";
+            c.style.display="";
+          }else if(c.style.display==""){
+            a.style.display="";
+            b.style.display="none";
+            c.style.display="none";
+          }
+          this.active++
+          if (this.active == 2) {
+            this.frontButton = false;
+            this.nextButton = true;
+          }
+
+        },
+
+        front: function(){
+          var a = document.getElementById("fltMain");
+          var b = document.getElementById("mapMain");
+          var c = document.getElementById("showMain");
+
+          b.style.visibility="visible";
+          c.style.visibility="visible";
+
+          if(a.style.display==""){
+            a.style.display="none";
+            b.style.display="none";
+            c.style.display="";
+          }else if(b.style.display==""){
+            a.style.display="";
+            b.style.display="none";
+            c.style.display="none";
+          }else if(c.style.display==""){
+            a.style.display="none";
+            b.style.display="";
+            c.style.display="none";
+          }
+          this.active--;
+          if (this.active == 0) {
+            this.frontButton = true;
+            this.nextButton = false;
+          }
+
+        }
+      },
     })
   </script>
 
@@ -79,7 +146,17 @@
   .el-transfer-panel__list.is-filterable{
   height: 400px;
   }
-
+  #fltMain{
+    display: "";
+  }
+  #mapMain{
+    visibility: hidden;
+    display: "";
+  }
+  #showMain{
+    visibility: hidden;
+    display: "";
+  }
 </style>
 
 </html>
