@@ -9,14 +9,23 @@
   <div id="app">
     <el-container>
       <el-header>
-        <div id="topBar">
-          <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
-            <el-menu-item index="1">选课</el-menu-item>
-            <el-menu-item index="2">安排教学计划</el-menu-item>
-            <el-menu-item index="3">生成课表</el-menu-item>
-          </el-menu>
-          <el-Button>haha</el-Button>
-        </div>
+        <el-row :gutter="30">
+          <el-col :span="14">
+            <el-steps :active="active" finish-status="success">
+              <el-step title="选课"></el-step>
+              <el-step title="安排教学计划"></el-step>
+              <el-step title="生成课表"></el-step>
+            </el-steps>
+          </el-col>
+          <el-col :span="5">
+            <div id="appd">
+              <el-button-group id="ccc">
+                <el-button type="primary" icon="el-icon-arrow-left">上一页</el-button>
+                <el-button type="primary">下一页<i class="el-icon-arrow-right el-icon--right"></i>
+              </el-button-group>
+            </div>
+          </el-col>
+        </el-row>
       </el-header>
 
       <el-main>
@@ -61,11 +70,6 @@
   </script>
 
 <style>
-  /* 顶栏 */
-  #topBar{
-    display: inline;
-  }
-
   /* 穿梭框外框 */
   .el-transfer-panel{
   width: 400px;
