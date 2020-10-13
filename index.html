@@ -9,21 +9,25 @@
   <div id="app">
     <el-container>
       <el-header>
-        <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
-          <el-menu-item index="1">选课</el-menu-item>
-          <el-menu-item index="2">排序</el-menu-item>
-          <el-menu-item index="3">生成课表</el-menu-item>
-        </el-menu>  
+        <div id="topBar">
+          <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+            <el-menu-item index="1">选课</el-menu-item>
+            <el-menu-item index="2">安排教学计划</el-menu-item>
+            <el-menu-item index="3">生成课表</el-menu-item>
+          </el-menu>
+          <el-Button>haha</el-Button>
+        </div>
       </el-header>
 
       <el-main>
-        <div>
+        <div id="fltMain">
           <el-transfer
             filterable
             :filter-method="filterMethod"
             filter-placeholder="输入课程关键词以搜索"
             v-model="value"
-            :data="datad">
+            :data="datad"
+            :titles="flt_titles">
           </el-transfer>
         </div>
       </el-main>
@@ -39,13 +43,14 @@
     var vm = new Vue({
       el: '#app',
       data: {
+        flt_titles: ["可选课程","未选课程"],
         // datad: [{key:1,label:'上海'}, {key:2,label:'北京'}, {key:3,label:'广州'}, {key:4,label:'深圳'}, {key:5,label:'南京'}, {key:6,label:'西安'}, {key:7,label:'成都'}],
         datad: (function(){
           d = [];
-          cities = ['上海', '北京', '广州', '深圳', '南京', '西安', '成都'];
-          cities.forEach(city => {
+          courses = ['高等数学', '大学物理', '线性代数', '概率论', 'C语言', '面向对象程序设计', '人工智能导论','大魔导士导论'];
+          courses.forEach(course => {
             d.push({
-              key: city
+              key: course
             });
           });
           return d;
@@ -55,5 +60,22 @@
     })
   </script>
 
+<style>
+  /* 顶栏 */
+  #topBar{
+    display: inline;
+  }
+
+  /* 穿梭框外框 */
+  .el-transfer-panel{
+  width: 400px;
+  height: 500px;
+  }
+  /* 穿梭框内框 */
+  .el-transfer-panel__list.is-filterable{
+  height: 400px;
+  }
+
+</style>
 
 </html>
