@@ -17,15 +17,15 @@
       </el-header>
 
       <el-main>
-        <template>
+        <div>
           <el-transfer
             filterable
             :filter-method="filterMethod"
             filter-placeholder="输入课程关键词以搜索"
             v-model="value"
-            :data="data">
+            :data="datad">
           </el-transfer>
-        </template>
+        </div>
       </el-main>
     </el-container>
   </div>
@@ -36,35 +36,24 @@
   <!-- import JavaScript -->
   <script src="https://unpkg.com/element-ui/lib/index.js"></script>
   <script>
-    var Main = {
-      data() {
-        const generateData = _ => {
-          const data = [];
-          const courses = ['高等数学', '工程吐血', '线性代数', '概率论', 'C语言', '面向对象程序设计', '人工智能', '大魔导师导论'];
-          courses.forEach((city, index) => {
-            data.push({
-              label: city,
-              key: index,
+    var vm = new Vue({
+      el: '#app',
+      data: {
+        // datad: [{key:1,label:'上海'}, {key:2,label:'北京'}, {key:3,label:'广州'}, {key:4,label:'深圳'}, {key:5,label:'南京'}, {key:6,label:'西安'}, {key:7,label:'成都'}],
+        datad: (function(){
+          d = [];
+          cities = ['上海', '北京', '广州', '深圳', '南京', '西安', '成都'];
+          cities.forEach(city => {
+            d.push({
+              key: city
             });
           });
-          return data;
-        };
-        return {
-          data: generateData(),
-          value: []
-        };
+          return d;
+        })(),
+        value: []
       }
-    };
-  var Ctor = Vue.extend(Main)
-  new Ctor().$mount('#app')
+    })
   </script>
 
-
-
-  <style type="text/css">
-    #TitleBox{
-      display: flex;
-    }
-  </style>
 
 </html>
