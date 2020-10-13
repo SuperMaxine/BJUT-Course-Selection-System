@@ -1,19 +1,70 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <title>Hello World!</title>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    We are using Node.js <span id="node-version"></span>,
-    Chromium <span id="chrome-version"></span>,
-    and Electron <span id="electron-version"></span>.
+<head>
+  <meta charset="UTF-8">
+  <!-- import CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+<body>
+  <div id="app">
+    <el-container>
+      <el-header>
+        <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+          <el-menu-item index="1">选课</el-menu-item>
+          <el-menu-item index="2">排序</el-menu-item>
+          <el-menu-item index="3">生成课表</el-menu-item>
+        </el-menu>  
+      </el-header>
 
-    <!-- You can also require other files to run in this process -->
-    <script src="./renderer.js"></script>
-  </body>
+      <el-main>
+        <template>
+          <el-transfer
+            filterable
+            :filter-method="filterMethod"
+            filter-placeholder="输入课程关键词以搜索"
+            v-model="value"
+            :data="data">
+          </el-transfer>
+        </template>
+      </el-main>
+    </el-container>
+  </div>
+</body>
+
+  <!-- import Vue before Element -->
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <!-- import JavaScript -->
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+    var Main = {
+      data() {
+        const generateData = _ => {
+          const data = [];
+          const courses = ['高等数学', '工程吐血', '线性代数', '概率论', 'C语言', '面向对象程序设计', '人工智能', '大魔导师导论'];
+          courses.forEach((city, index) => {
+            data.push({
+              label: city,
+              key: index,
+            });
+          });
+          return data;
+        };
+        return {
+          data: generateData(),
+          value: []
+        };
+      }
+    };
+  var Ctor = Vue.extend(Main)
+  new Ctor().$mount('#app')
+  </script>
+
+
+
+  <style type="text/css">
+    #TitleBox{
+      display: flex;
+    }
+  </style>
+
 </html>
