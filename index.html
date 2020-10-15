@@ -40,10 +40,11 @@
             :on-exceed="handleExceed"
             :file-list="fileList">
             <div id="uplaod-button">
-              <el-button size="small" type="primary">点击解析</el-button>
-              <div slot="tip" class="el-upload__tip">选择一个json文件以解析</div>
+              <el-button type="primary" plain>点击解析<i class="el-icon-upload el-icon--right"></i></el-button>
+              <div slot="tip" class="el-upload__tip" style="padding-left: 10px;"> 选择一个json文件以解析</div>
             </div>
           </el-upload>
+          <br><br>
           <el-transfer
             id="transfer"
             filterable
@@ -56,7 +57,8 @@
 
         <!-- 调整顺序页面 -->
         <div id="mapMain">
-          <el-button type="primary">主要按钮</el-button>
+          <el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10" label="输入学期数"></el-input-number>
+          <el-button type="primary" style="padding-left: 10px;">预览课表</el-button>
 
         </div>
 
@@ -78,23 +80,28 @@
       data: {
         flt_titles: ["可选课程","未选课程"],
         // datad: [{key:1,label:'上海'}, {key:2,label:'北京'}, {key:3,label:'广州'}, {key:4,label:'深圳'}, {key:5,label:'南京'}, {key:6,label:'西安'}, {key:7,label:'成都'}],
-        datad: (function(){
-          d = [];
-          courses = ['高等数学', '大学物理', '线性代数', '概率论', 'C语言', '面向对象程序设计', '人工智能导论','大魔导士导论'];
-          courses.forEach(course => {
-            d.push({
-              key: course
-            });
-          });
-          return d;
-        })(),
+        // datad: (function(){
+        //   d = [];
+        //   courses = ['高等数学', '大学物理', '线性代数', '概率论', 'C语言', '面向对象程序设计', '人工智能导论','大魔导士导论'];
+        //   courses.forEach(course => {
+        //     d.push({
+        //       key: course
+        //     });
+        //   });
+        //   return d;
+        // })(),
+        datad: [],
+        RawMap: [],
+
         value: [],
         active: 0,
         frontButton: true,
         nextButton: false,
         submitButton: true,
 
-        fileList:[]
+        fileList:[],
+
+        NumOfSemesters: 8
 
       },
       methods: {
@@ -115,8 +122,16 @@
             $.ajax({
               type:'get',
               url:file.path,
+              dataType:"json",
               success: function(data){
                   console.log(data);
+                  data.courses.forEach(course => {
+                    vm.datad.push({key: course.name});
+                    vm.RawMap.push({
+                      name: course.name,
+                      pre: course.pre
+                    })
+                  });
               },
               error: function(data){
                   alert(JSON.stringify(data));
@@ -190,7 +205,12 @@
             this.nextButton = false;
           }
 
+        },
+
+        SmstNumChange: function(){
+          
         }
+
       },
     })
   </script>
