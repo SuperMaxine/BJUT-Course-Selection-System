@@ -76,6 +76,50 @@
   <script src="https://unpkg.com/element-ui/lib/index.js"></script>
   <!-- Vue脚本 -->
   <script>
+    function printRawData(){
+      vm.RawMap.forEach( course => {
+        console.log("in outside function: "+course.name);
+      });
+    }
+
+    function divideSemester(){
+      var TableData = []
+      // 复制原始数组
+      var tmpMap = vm.RawMap;
+
+      while(tmpMap.length > 0){
+        // 挑出所有入度为0的节点
+        var ASemester = tmpMap.filter(function(p){
+          return p.pre.length == 0;
+        });
+        TableData.push(ASemester);
+
+        ASemester.forEach( course => {
+          // 在局部图中删除所有入度为0的节点
+          var courseIndex = tmpMap.lastIndexOf(course);
+          tmpMap.splice(courseIndex, 1);
+
+          // 删除所有局部图中已经不存在的入度
+          // 筛选所有存在无效入度的节点
+          tmpMap.filter(function(p){
+            return p.pre.lastIndexOf(course.name) != -1;
+          }).forEach( hasUselessCourse => {
+            // 在局部图中删除这些节点pre中的无效数据
+            var UselessCourseIndex = hasUselessCourse.pre.lastIndexOf(course.name);
+            tmpMap[tmpMap.lastIndexOf(hasUselessCourse)].pre.splice(UselessCourseIndex, 1);
+          })
+        })
+      }
+
+      vm.TableData = TableData;
+
+    }
+
+    // 生成第二页的表单数据
+    function generateTable(){
+
+    }
+
     var vm = new Vue({
       el: '#app',
       data: {
@@ -103,7 +147,10 @@
         fileList:[],
 
         NumOfSemesters: 8,
-        StudyHour: 280
+        StudyHour: 280,
+
+        Semester: [],
+        TableData: []
 
       },
       methods: {
@@ -118,7 +165,7 @@
           //获取后缀
           var ext = filePath.substr(index+1);
           //输出结果
-          console.log(ext);
+          // console.log(ext);
           if(ext=="json"){
             console.log(file.path);
             $.ajax({
@@ -127,7 +174,7 @@
               dataType:"json",
               success: function(data){
                   // 获取json
-                  console.log(data);
+                  // console.log(data);
                   // 将json传送给内置变量
                   data.courses.forEach(course => {
                     vm.datad.push({key: course.name});
@@ -141,11 +188,13 @@
                   data.courses.forEach(course => {
                     if(course.pre.length != 0){
                       course.pre.forEach( precourse => {
-                        console.log(precourse);
+                        // console.log(precourse);
                         vm.RawMap[vm.RawMap.lastIndexOf(vm.RawMap.filter(function(p){return p.name===precourse})[0])].next.push(course.name);
                       })
                     }
                   })
+                  // 测试外置函数
+                  printRawData();
               },
               error: function(data){
                   alert(JSON.stringify(data));
