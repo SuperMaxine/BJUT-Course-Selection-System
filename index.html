@@ -57,10 +57,21 @@
 
         <!-- 调整顺序页面 -->
         <div id="mapMain">
-          <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10" label="输入学期数"></el-input-number>
-          <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="180" :max="380" label="输入学时数"></el-input-number>
-          <span style="padding-left: 60px;"></span><el-button type="primary">预览课表</el-button>
-
+          <div id="mapMain_sub1">
+            <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10" label="输入学期数"></el-input-number>
+            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="180" :max="380" label="输入学时数"></el-input-number>
+            <span style="padding-left: 60px;"></span><el-button type="primary">预览课表</el-button>
+          </div>
+          
+          <div id="mapMain_sub2">
+            <div v-for="table in TableData">
+              <ul>
+                <li v-for="course in table" :key="course.name">
+                  {{course.name}}
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <!-- 生成课表页面 -->
@@ -85,7 +96,18 @@
     function divideSemester(){
       var TableData = []
       // 复制原始数组
-      var tmpMap = vm.RawMap;
+      // var tmpMap = vm.RawMap;
+      var tmpMap = [];
+      // vm.RawMap.forEach( course => {
+      //   tmpMap.push(course);
+      // });
+      vm.value.forEach( choosedCourse => {
+        tmpMap.push(JSON.parse(JSON.stringify(vm.RawMap.filter(function(p){
+          return p.name == choosedCourse;
+        })[0])))
+      })
+      
+
 
       while(tmpMap.length > 0){
         // 挑出所有入度为0的节点
@@ -117,7 +139,12 @@
 
     // 生成第二页的表单数据
     function generateTable(){
+      var Table = [];
 
+      var state = true;
+
+
+      vm.Table = Table;
     }
 
     var vm = new Vue({
@@ -150,7 +177,8 @@
         StudyHour: 280,
 
         Semester: [],
-        TableData: []
+        TableData: [],
+        Table: []
 
       },
       methods: {
@@ -208,6 +236,9 @@
           this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件`);
         },
         next: function(){
+          // 刷新课程拓扑排序
+          divideSemester();
+
           var a = document.getElementById("fltMain");
           var b = document.getElementById("mapMain");
           var c = document.getElementById("showMain");
@@ -307,6 +338,19 @@
   }
   #mapMain{
     visibility: hidden;
+    flex-direction: column;
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center;     /* 垂直居中 */
+  }
+  #mapMain_sub1{
+    /* visibility: hidden; */
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center;     /* 垂直居中 */
+  }
+  #mapMain_sub2{
+    /* visibility: hidden; */
     display: flex;
     justify-content: center; /* 水平居中 */
     align-items: center;     /* 垂直居中 */
