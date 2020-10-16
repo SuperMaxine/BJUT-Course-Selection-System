@@ -69,11 +69,6 @@
             <!-- <div id="paperList" v-for="table in TableData"></div> -->
             <div v-for="table in TableData" id="paperList">
               <div id="paperOutsideDiv" v-for="course in table" :key="course.name">
-                <!-- <ul>
-                  <li v-for="course in table" :key="course.name">
-                    {{course.name}}
-                  </li>
-                </ul> -->
                 <div id="paper" draggable="true">
                   {{course.name}}
                 </div>
@@ -102,11 +97,88 @@
       });
     }
 
+    function backToFirstPage(){
+      vm.active = 0;
+      var a = document.getElementById("fltMain");
+      var b = document.getElementById("mapMain");
+      var c = document.getElementById("showMain");
+      a.style.display="flex";
+      b.style.display="none";
+      c.style.display="none";
+      this.frontButton = true;
+      this.nextButton = false;
+    }
+
 
     // 检查所选课程是否满足依赖关系，将缺失前置课的课程和所缺的课程列出
     function check(){
+      alreadyHavePreCourse = [];
+      warningArray = [];
+      // 遍历每一列的课程数组
+      vm.TableData.forEach( colCourse => {
+        console.log("遍历每一列的课程数组:");
+        console.log(colCourse);
+        // 遍历这一列的每一个课程
+        colCourse.forEach( course => {
+          console.log("遍历这一列的每一个课程");
+          console.log(course);
+          // 遍历这个课程的每一个前置课程
+          course.pre.forEach( precourse => {
+            console.log("遍历这个课程的每一个前置课程");
+            console.log(precourse);
 
-    } 
+            // 如果这个前置课程之前没学过，加入警告数组
+            console.log("如果这个前置课程之前没学过，加入警告数组");
+            if(alreadyHavePreCourse.lastIndexOf(precourse) == -1){
+              console.log("alreadyHavePreCourse.lastIndexOf(precourse) == " + alreadyHavePreCourse.lastIndexOf(precourse));
+              // 警告数组中如果已经存在此时所检查的课程，直接在pre数组中添加
+              console.log("警告数组中如果已经存在此时所检查的课程，直接在pre数组中添加")
+              var warningCourse = warningArray.filter(function(p){
+                return p.name == course.name;
+              });
+              console.log("warningCourse.length = " + warningCourse.length)
+              if(warningCourse.length > 0){
+                warningCourse[0].pre.push(precourse);
+              }else{
+                // 如果还没有此时检查的课程，则向警告数组添加一个对象
+                warningArray.push({
+                  name: course.name,
+                  pre: [precourse]
+                });
+              }
+            }
+          });
+        });
+
+        // 这一列的所有课程加入已经学过的课程
+        colCourse.forEach( course =>{
+          alreadyHavePreCourse.push(course.name);
+        });
+
+      })
+      
+      console.log(warningArray)
+
+      if(warningArray.length == 0)return true;
+      else {
+        var warningMessage = "";
+        warningArray.forEach( warningCourse =>{
+          warningMessage = warningMessage + "您所选的课程<strong>" + warningCourse.name + "</strong>还需要前置课程:<ol>"
+          warningCourse.pre.forEach( warningPreCourse => {
+            warningMessage = warningMessage + "<li>" + warningPreCourse +"</li>"
+          })
+          warningMessage = warningMessage + "</ol>"
+        })
+        // 弹出错误提示
+        vm.$notify.error({
+          title: '您学不会啊',
+          dangerouslyUseHTMLString: true,
+          message: warningMessage,
+          duration: 0
+        });
+        return false;
+      }
+    }
 
     function divideSemester(){
       var TableData = []
@@ -121,14 +193,53 @@
           return p.name == choosedCourse;
         })[0])))
       })
-      
+
+      // 判断能否进行拓扑排序
+      var warningArray = [];
+      tmpMap.forEach( course => {
+        course.pre.forEach( precourse => {
+          var courseInTmpMap = tmpMap.filter(function(p){return p.name == precourse;});
+
+          if(courseInTmpMap.length == 0){
+            var courseInWarningArray = warningArray.filter(function(p){return p.name == course.name;});
+            if(courseInWarningArray.length == 0){
+              warningArray.push({
+                name: course.name,
+                pre: [precourse]
+              })
+            }else{
+              courseInWarningArray[0].pre.push(precourse);
+            }
+          }
+        })
+      })
+      if(warningArray.length > 0){
+        var warningMessage = "";
+        warningArray.forEach( warningCourse =>{
+          warningMessage = warningMessage + "您所选的课程<strong>" + warningCourse.name + "</strong>还需要前置课程:<ol>"
+          warningCourse.pre.forEach( warningPreCourse => {
+            warningMessage = warningMessage + "<li>" + warningPreCourse +"</li>"
+          })
+          warningMessage = warningMessage + "</ol>"
+        })
+        // 弹出错误提示
+        vm.$notify.error({
+          title: '您学不会啊',
+          dangerouslyUseHTMLString: true,
+          message: warningMessage,
+          duration: 0
+        });
+        return false;
+      }
+
+
+      // 拓扑排序子集划分
       while(tmpMap.length > 0){
         // 挑出所有入度为0的节点
         var ASemester = tmpMap.filter(function(p){
           return p.pre.length == 0;
         });
         TableData.push(ASemester);
-
         ASemester.forEach( course => {
           // 在局部图中删除所有入度为0的节点
           var courseIndex = tmpMap.lastIndexOf(course);
@@ -146,18 +257,16 @@
         })
       }
 
-      vm.TableData = TableData;
+      // 此时所有节点都没有pre数据
+      // 从RawMap中添加pre数据
+      TableData.forEach( colCourses => {
+        colCourses.forEach( course => {
+          course.pre = vm.RawMap.filter(function(p){return p.name == course.name})[0].pre;
+        })
+      })
+      vm.TableData = JSON.parse(JSON.stringify(TableData));
 
-    }
-
-    // 生成第二页的表单数据
-    function generateTable(){
-      var Table = [];
-
-      var state = true;
-
-
-      vm.Table = Table;
+      return true;
     }
 
     var vm = new Vue({
@@ -190,8 +299,7 @@
         StudyHour: 280,
 
         Semester: [],
-        TableData: [],
-        Table: []
+        TableData: []
 
       },
       methods: {
@@ -199,7 +307,7 @@
 
         },
         upload: function(file){
-          console.log(file);
+          // console.log(file);
           var filePath=file.path;
           //获取最后一个.的位置
           var index= filePath.lastIndexOf(".");
@@ -208,7 +316,7 @@
           //输出结果
           // console.log(ext);
           if(ext=="json"){
-            console.log(file.path);
+            // console.log(file.path);
             $.ajax({
               type:'get',
               url:file.path,
@@ -235,7 +343,7 @@
                     }
                   })
                   // 测试外置函数
-                  printRawData();
+                  //printRawData();
               },
               error: function(data){
                   alert(JSON.stringify(data));
@@ -250,7 +358,7 @@
         },
         next: function(){
           // 刷新课程拓扑排序
-          divideSemester();
+          if(divideSemester() == false)return;
 
           var a = document.getElementById("fltMain");
           var b = document.getElementById("mapMain");
@@ -374,8 +482,8 @@
     flex: 1;
     flex-direction: column;
     border-left: dashed black;
-    /* justify-content: center; 水平居中 */
-    /* align-items: center;     垂直居中 */
+    justify-content: center; 水平居中
+    align-items: center;     垂直居中
   }
   #paperList:first-child{
     flex-direction: column;
