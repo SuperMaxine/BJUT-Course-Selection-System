@@ -84,354 +84,358 @@
     </el-container>
   </div>
 </body>
-  <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
-  <!-- import Vue before Element -->
-  <script src="https://unpkg.com/vue/dist/vue.js"></script>
-  <!-- import JavaScript -->
-  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
-  <!-- Vue脚本 -->
-  <script>
-    function printRawData(){
-      vm.RawMap.forEach( course => {
-        console.log("in outside function: "+course.name);
-      });
-    }
-
-    function backToFirstPage(){
-      vm.active = 0;
-      var a = document.getElementById("fltMain");
-      var b = document.getElementById("mapMain");
-      var c = document.getElementById("showMain");
-      a.style.display="flex";
-      b.style.display="none";
-      c.style.display="none";
-      this.frontButton = true;
-      this.nextButton = false;
-    }
 
 
-    // 检查所选课程是否满足依赖关系，将缺失前置课的课程和所缺的课程列出
-    function check(){
-      alreadyHavePreCourse = [];
-      warningArray = [];
-      // 遍历每一列的课程数组
-      vm.TableData.forEach( colCourse => {
-        console.log("遍历每一列的课程数组:");
-        console.log(colCourse);
-        // 遍历这一列的每一个课程
-        colCourse.forEach( course => {
-          console.log("遍历这一列的每一个课程");
-          console.log(course);
-          // 遍历这个课程的每一个前置课程
-          course.pre.forEach( precourse => {
-            console.log("遍历这个课程的每一个前置课程");
-            console.log(precourse);
+<script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
+<!-- import Vue before Element -->
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<!-- Vue脚本 -->
+<script>
+  function printRawData(){
+    vm.RawMap.forEach( course => {
+      console.log("in outside function: "+course.name);
+    });
+  }
 
-            // 如果这个前置课程之前没学过，加入警告数组
-            console.log("如果这个前置课程之前没学过，加入警告数组");
-            if(alreadyHavePreCourse.lastIndexOf(precourse) == -1){
-              console.log("alreadyHavePreCourse.lastIndexOf(precourse) == " + alreadyHavePreCourse.lastIndexOf(precourse));
-              // 警告数组中如果已经存在此时所检查的课程，直接在pre数组中添加
-              console.log("警告数组中如果已经存在此时所检查的课程，直接在pre数组中添加")
-              var warningCourse = warningArray.filter(function(p){
-                return p.name == course.name;
-              });
-              console.log("warningCourse.length = " + warningCourse.length)
-              if(warningCourse.length > 0){
-                warningCourse[0].pre.push(precourse);
-              }else{
-                // 如果还没有此时检查的课程，则向警告数组添加一个对象
-                warningArray.push({
-                  name: course.name,
-                  pre: [precourse]
-                });
-              }
-            }
-          });
-        });
+  function backToFirstPage(){
+    vm.active = 0;
+    var a = document.getElementById("fltMain");
+    var b = document.getElementById("mapMain");
+    var c = document.getElementById("showMain");
+    a.style.display="flex";
+    b.style.display="none";
+    c.style.display="none";
+    vm.frontButton = true;
+    vm.nextButton = false;
+  }
 
-        // 这一列的所有课程加入已经学过的课程
-        colCourse.forEach( course =>{
-          alreadyHavePreCourse.push(course.name);
-        });
 
-      })
-      
-      console.log(warningArray)
-
-      if(warningArray.length == 0)return true;
-      else {
-        var warningMessage = "";
-        warningArray.forEach( warningCourse =>{
-          warningMessage = warningMessage + "您所选的课程<strong>" + warningCourse.name + "</strong>还需要前置课程:<ol>"
-          warningCourse.pre.forEach( warningPreCourse => {
-            warningMessage = warningMessage + "<li>" + warningPreCourse +"</li>"
-          })
-          warningMessage = warningMessage + "</ol>"
-        })
-        // 弹出错误提示
-        vm.$notify.error({
-          title: '您学不会啊',
-          dangerouslyUseHTMLString: true,
-          message: warningMessage,
-          duration: 0
-        });
-        return false;
-      }
-    }
-
-    function divideSemester(){
-      var TableData = []
-      // 复制原始数组
-      // var tmpMap = vm.RawMap;
-      var tmpMap = [];
-      // vm.RawMap.forEach( course => {
-      //   tmpMap.push(course);
-      // });
-      vm.value.forEach( choosedCourse => {
-        tmpMap.push(JSON.parse(JSON.stringify(vm.RawMap.filter(function(p){
-          return p.name == choosedCourse;
-        })[0])))
-      })
-
-      // 判断能否进行拓扑排序
-      var warningArray = [];
-      tmpMap.forEach( course => {
+  // 检查所选课程是否满足依赖关系，将缺失前置课的课程和所缺的课程列出
+  function check(){
+    alreadyHavePreCourse = [];
+    warningArray = [];
+    // 遍历每一列的课程数组
+    vm.TableData.forEach( colCourse => {
+      console.log("遍历每一列的课程数组:");
+      console.log(colCourse);
+      // 遍历这一列的每一个课程
+      colCourse.forEach( course => {
+        console.log("遍历这一列的每一个课程");
+        console.log(course);
+        // 遍历这个课程的每一个前置课程
         course.pre.forEach( precourse => {
-          var courseInTmpMap = tmpMap.filter(function(p){return p.name == precourse;});
+          console.log("遍历这个课程的每一个前置课程");
+          console.log(precourse);
 
-          if(courseInTmpMap.length == 0){
-            var courseInWarningArray = warningArray.filter(function(p){return p.name == course.name;});
-            if(courseInWarningArray.length == 0){
+          // 如果这个前置课程之前没学过，加入警告数组
+          console.log("如果这个前置课程之前没学过，加入警告数组");
+          if(alreadyHavePreCourse.lastIndexOf(precourse) == -1){
+            console.log("alreadyHavePreCourse.lastIndexOf(precourse) == " + alreadyHavePreCourse.lastIndexOf(precourse));
+            // 警告数组中如果已经存在此时所检查的课程，直接在pre数组中添加
+            console.log("警告数组中如果已经存在此时所检查的课程，直接在pre数组中添加")
+            var warningCourse = warningArray.filter(function(p){
+              return p.name == course.name;
+            });
+            console.log("warningCourse.length = " + warningCourse.length)
+            if(warningCourse.length > 0){
+              warningCourse[0].pre.push(precourse);
+            }else{
+              // 如果还没有此时检查的课程，则向警告数组添加一个对象
               warningArray.push({
                 name: course.name,
                 pre: [precourse]
-              })
-            }else{
-              courseInWarningArray[0].pre.push(precourse);
+              });
             }
           }
-        })
-      })
-      if(warningArray.length > 0){
-        var warningMessage = "";
-        warningArray.forEach( warningCourse =>{
-          warningMessage = warningMessage + "您所选的课程<strong>" + warningCourse.name + "</strong>还需要前置课程:<ol>"
-          warningCourse.pre.forEach( warningPreCourse => {
-            warningMessage = warningMessage + "<li>" + warningPreCourse +"</li>"
-          })
-          warningMessage = warningMessage + "</ol>"
-        })
-        // 弹出错误提示
-        vm.$notify.error({
-          title: '您学不会啊',
-          dangerouslyUseHTMLString: true,
-          message: warningMessage,
-          duration: 0
         });
-        return false;
-      }
+      });
 
+      // 这一列的所有课程加入已经学过的课程
+      colCourse.forEach( course =>{
+        alreadyHavePreCourse.push(course.name);
+      });
 
-      // 拓扑排序子集划分
-      while(tmpMap.length > 0){
-        // 挑出所有入度为0的节点
-        var ASemester = tmpMap.filter(function(p){
-          return p.pre.length == 0;
-        });
-        TableData.push(ASemester);
-        ASemester.forEach( course => {
-          // 在局部图中删除所有入度为0的节点
-          var courseIndex = tmpMap.lastIndexOf(course);
-          tmpMap.splice(courseIndex, 1);
+    })
+    
+    console.log(warningArray)
 
-          // 删除所有局部图中已经不存在的入度
-          // 筛选所有存在无效入度的节点
-          tmpMap.filter(function(p){
-            return p.pre.lastIndexOf(course.name) != -1;
-          }).forEach( hasUselessCourse => {
-            // 在局部图中删除这些节点pre中的无效数据
-            var UselessCourseIndex = hasUselessCourse.pre.lastIndexOf(course.name);
-            tmpMap[tmpMap.lastIndexOf(hasUselessCourse)].pre.splice(UselessCourseIndex, 1);
-          })
+    if(warningArray.length == 0)return true;
+    else {
+      var warningMessage = "";
+      warningArray.forEach( warningCourse =>{
+        warningMessage = warningMessage + "您所选的课程<strong>" + warningCourse.name + "</strong>还需要前置课程:<ol>"
+        warningCourse.pre.forEach( warningPreCourse => {
+          warningMessage = warningMessage + "<li>" + warningPreCourse +"</li>"
         })
-      }
-
-      // 此时所有节点都没有pre数据
-      // 从RawMap中添加pre数据
-      TableData.forEach( colCourses => {
-        colCourses.forEach( course => {
-          course.pre = vm.RawMap.filter(function(p){return p.name == course.name})[0].pre;
-        })
+        warningMessage = warningMessage + "</ol>"
       })
-      vm.TableData = JSON.parse(JSON.stringify(TableData));
+      // 弹出错误提示
+      vm.$notify.error({
+        title: '您学不会啊',
+        dangerouslyUseHTMLString: true,
+        message: warningMessage,
+        duration: 0
+      });
+      return false;
+    }
+  }
 
-      return true;
+  function divideSemester(){
+    var TableData = []
+    // 复制原始数组
+    // var tmpMap = vm.RawMap;
+    var tmpMap = [];
+    // vm.RawMap.forEach( course => {
+    //   tmpMap.push(course);
+    // });
+    vm.value.forEach( choosedCourse => {
+      tmpMap.push(JSON.parse(JSON.stringify(vm.RawMap.filter(function(p){
+        return p.name == choosedCourse;
+      })[0])))
+    })
+
+    // 判断能否进行拓扑排序
+    var warningArray = [];
+    tmpMap.forEach( course => {
+      course.pre.forEach( precourse => {
+        var courseInTmpMap = tmpMap.filter(function(p){return p.name == precourse;});
+
+        if(courseInTmpMap.length == 0){
+          var courseInWarningArray = warningArray.filter(function(p){return p.name == course.name;});
+          if(courseInWarningArray.length == 0){
+            warningArray.push({
+              name: course.name,
+              pre: [precourse]
+            })
+          }else{
+            courseInWarningArray[0].pre.push(precourse);
+          }
+        }
+      })
+    })
+    if(warningArray.length > 0){
+      var warningMessage = "";
+      warningArray.forEach( warningCourse =>{
+        warningMessage = warningMessage + "您所选的课程<strong>" + warningCourse.name + "</strong>还需要前置课程:<ol>"
+        warningCourse.pre.forEach( warningPreCourse => {
+          warningMessage = warningMessage + "<li>" + warningPreCourse +"</li>"
+        })
+        warningMessage = warningMessage + "</ol>"
+      })
+      // 弹出错误提示
+      vm.$notify.error({
+        title: '您学不会啊',
+        dangerouslyUseHTMLString: true,
+        message: warningMessage,
+        duration: 0
+      });
+      return false;
     }
 
-    var vm = new Vue({
-      el: '#app',
-      data: {
-        flt_titles: ["可选课程","未选课程"],
-        // datad: [{key:1,label:'上海'}, {key:2,label:'北京'}, {key:3,label:'广州'}, {key:4,label:'深圳'}, {key:5,label:'南京'}, {key:6,label:'西安'}, {key:7,label:'成都'}],
-        // datad: (function(){
-        //   d = [];
-        //   courses = ['高等数学', '大学物理', '线性代数', '概率论', 'C语言', '面向对象程序设计', '人工智能导论','大魔导士导论'];
-        //   courses.forEach(course => {
-        //     d.push({
-        //       key: course
-        //     });
-        //   });
-        //   return d;
-        // })(),
-        datad: [],
-        RawMap: [],
 
-        value: [],
-        active: 0,
-        frontButton: true,
-        nextButton: false,
-        submitButton: true,
+    // 拓扑排序子集划分
+    while(tmpMap.length > 0){
+      // 挑出所有入度为0的节点
+      var ASemester = tmpMap.filter(function(p){
+        return p.pre.length == 0;
+      });
+      TableData.push(ASemester);
+      ASemester.forEach( course => {
+        // 在局部图中删除所有入度为0的节点
+        var courseIndex = tmpMap.lastIndexOf(course);
+        tmpMap.splice(courseIndex, 1);
 
-        fileList:[],
+        // 删除所有局部图中已经不存在的入度
+        // 筛选所有存在无效入度的节点
+        tmpMap.filter(function(p){
+          return p.pre.lastIndexOf(course.name) != -1;
+        }).forEach( hasUselessCourse => {
+          // 在局部图中删除这些节点pre中的无效数据
+          var UselessCourseIndex = hasUselessCourse.pre.lastIndexOf(course.name);
+          tmpMap[tmpMap.lastIndexOf(hasUselessCourse)].pre.splice(UselessCourseIndex, 1);
+        })
+      })
+    }
 
-        NumOfSemesters: 8,
-        StudyHour: 280,
+    // 此时所有节点都没有pre数据
+    // 从RawMap中添加pre数据
+    TableData.forEach( colCourses => {
+      colCourses.forEach( course => {
+        course.pre = vm.RawMap.filter(function(p){return p.name == course.name})[0].pre;
+      })
+    })
+    vm.TableData = JSON.parse(JSON.stringify(TableData));
 
-        Semester: [],
-        TableData: []
+    return true;
+  }
+
+  var vm = new Vue({
+    el: '#app',
+    data: {
+      flt_titles: ["可选课程","未选课程"],
+      // datad: [{key:1,label:'上海'}, {key:2,label:'北京'}, {key:3,label:'广州'}, {key:4,label:'深圳'}, {key:5,label:'南京'}, {key:6,label:'西安'}, {key:7,label:'成都'}],
+      // datad: (function(){
+      //   d = [];
+      //   courses = ['高等数学', '大学物理', '线性代数', '概率论', 'C语言', '面向对象程序设计', '人工智能导论','大魔导士导论'];
+      //   courses.forEach(course => {
+      //     d.push({
+      //       key: course
+      //     });
+      //   });
+      //   return d;
+      // })(),
+      datad: [],
+      RawMap: [],
+
+      value: [],
+      active: 0,
+      frontButton: true,
+      nextButton: false,
+      submitButton: true,
+
+      fileList:[],
+
+      NumOfSemesters: 8,
+      StudyHour: 280,
+
+      Semester: [],
+      TableData: []
+
+    },
+    methods: {
+      submit: function(){
 
       },
-      methods: {
-        submit: function(){
-
-        },
-        upload: function(file){
-          // console.log(file);
-          var filePath=file.path;
-          //获取最后一个.的位置
-          var index= filePath.lastIndexOf(".");
-          //获取后缀
-          var ext = filePath.substr(index+1);
-          //输出结果
-          // console.log(ext);
-          if(ext=="json"){
-            // console.log(file.path);
-            $.ajax({
-              type:'get',
-              url:file.path,
-              dataType:"json",
-              success: function(data){
-                  // 获取json
-                  // console.log(data);
-                  // 将json传送给内置变量
-                  data.courses.forEach(course => {
-                    vm.datad.push({key: course.name});
-                    vm.RawMap.push({
-                      name: course.name,
-                      pre: course.pre,
-                      next: []
-                    })
-                  });
-                  // 添加每个节点的后置节点
-                  data.courses.forEach(course => {
-                    if(course.pre.length != 0){
-                      course.pre.forEach( precourse => {
-                        // console.log(precourse);
-                        vm.RawMap[vm.RawMap.lastIndexOf(vm.RawMap.filter(function(p){return p.name===precourse})[0])].next.push(course.name);
-                      })
-                    }
+      upload: function(file){
+        // console.log(file);
+        var filePath=file.path;
+        //获取最后一个.的位置
+        var index= filePath.lastIndexOf(".");
+        //获取后缀
+        var ext = filePath.substr(index+1);
+        //输出结果
+        // console.log(ext);
+        if(ext=="json"){
+          // console.log(file.path);
+          $.ajax({
+            type:'get',
+            url:file.path,
+            dataType:"json",
+            success: function(data){
+                // 获取json
+                // console.log(data);
+                // 将json传送给内置变量
+                data.courses.forEach(course => {
+                  vm.datad.push({key: course.name});
+                  vm.RawMap.push({
+                    name: course.name,
+                    pre: course.pre,
+                    next: []
                   })
-                  // 测试外置函数
-                  //printRawData();
-              },
-              error: function(data){
-                  alert(JSON.stringify(data));
-              }
-            });
-          }else{
-            this.$message.warning(`请选择一个json文件`);  
-          }
-        },
-        handleExceed(files, fileList) {
-          this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件`);
-        },
-        next: function(){
-          // 刷新课程拓扑排序
-          if(divideSemester() == false)return;
-
-          var a = document.getElementById("fltMain");
-          var b = document.getElementById("mapMain");
-          var c = document.getElementById("showMain");
-
-          b.style.visibility="visible";
-          c.style.visibility="visible";
-
-          if(a.style.display==""||a.style.display=="flex"){
-            a.style.display="none";
-            b.style.display="flex";
-            c.style.display="none";
-          }else if(b.style.display==""||b.style.display=="flex"){
-            a.style.display="none";
-            b.style.display="none";
-            c.style.display="flex";
-          }else if(c.style.display==""||c.style.display=="flex"){
-            a.style.display="flex";
-            b.style.display="none";
-            c.style.display="none";
-          }
-          this.active++
-          if (this.active == 2) {
-            this.frontButton = false;
-            this.submitButton = false;
-            this.nextButton = true;
-          }else{
-            this.frontButton = false;
-          }
-
-        },
-
-        front: function(){
-          var a = document.getElementById("fltMain");
-          var b = document.getElementById("mapMain");
-          var c = document.getElementById("showMain");
-
-          b.style.visibility="visible";
-          c.style.visibility="visible";
-
-          if(a.style.display==""||a.style.display=="flex"){
-            a.style.display="none";
-            b.style.display="none";
-            c.style.display="flex";
-          }else if(b.style.display==""||b.style.display=="flex"){
-            a.style.display="flex";
-            b.style.display="none";
-            c.style.display="none";
-          }else if(c.style.display==""||c.style.display=="flex"){
-            a.style.display="none";
-            b.style.display="flex";
-            c.style.display="none";
-          }
-          this.active--;
-          if (this.active == 0) {
-            this.frontButton = true;
-            this.nextButton = false;
-          }else{
-            this.nextButton = false;
-          }
-
-        },
-
-        SmstNumChange: function(){
-          
-        },
-
-        StudyHourChange: function(){
-          
+                });
+                // 添加每个节点的后置节点
+                data.courses.forEach(course => {
+                  if(course.pre.length != 0){
+                    course.pre.forEach( precourse => {
+                      // console.log(precourse);
+                      vm.RawMap[vm.RawMap.lastIndexOf(vm.RawMap.filter(function(p){return p.name===precourse})[0])].next.push(course.name);
+                    })
+                  }
+                })
+                // 测试外置函数
+                //printRawData();
+            },
+            error: function(data){
+                alert(JSON.stringify(data));
+            }
+          });
+        }else{
+          this.$message.warning(`请选择一个json文件`);  
         }
       },
-    })
-  </script>
+
+      handleExceed(files, fileList) {
+        this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件`);
+      },
+
+      next: function(){
+        // 刷新课程拓扑排序
+        if(divideSemester() == false)return;
+
+        var a = document.getElementById("fltMain");
+        var b = document.getElementById("mapMain");
+        var c = document.getElementById("showMain");
+
+        b.style.visibility="visible";
+        c.style.visibility="visible";
+
+        if(a.style.display==""||a.style.display=="flex"){
+          a.style.display="none";
+          b.style.display="flex";
+          c.style.display="none";
+        }else if(b.style.display==""||b.style.display=="flex"){
+          a.style.display="none";
+          b.style.display="none";
+          c.style.display="flex";
+        }else if(c.style.display==""||c.style.display=="flex"){
+          a.style.display="flex";
+          b.style.display="none";
+          c.style.display="none";
+        }
+        this.active++
+        if (this.active == 2) {
+          this.frontButton = false;
+          this.submitButton = false;
+          this.nextButton = true;
+        }else{
+          this.frontButton = false;
+        }
+
+      },
+
+      front: function(){
+        var a = document.getElementById("fltMain");
+        var b = document.getElementById("mapMain");
+        var c = document.getElementById("showMain");
+
+        b.style.visibility="visible";
+        c.style.visibility="visible";
+
+        if(a.style.display==""||a.style.display=="flex"){
+          a.style.display="none";
+          b.style.display="none";
+          c.style.display="flex";
+        }else if(b.style.display==""||b.style.display=="flex"){
+          a.style.display="flex";
+          b.style.display="none";
+          c.style.display="none";
+        }else if(c.style.display==""||c.style.display=="flex"){
+          a.style.display="none";
+          b.style.display="flex";
+          c.style.display="none";
+        }
+        this.active--;
+        if (this.active == 0) {
+          this.frontButton = true;
+          this.nextButton = false;
+        }else{
+          this.nextButton = false;
+        }
+
+      },
+
+      SmstNumChange: function(){
+        
+      },
+
+      StudyHourChange: function(){
+        
+      }
+    },
+  })
+</script>
 
 
 <!-- CSS样式 -->
