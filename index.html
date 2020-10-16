@@ -54,6 +54,8 @@
             :titles="flt_titles">
           </el-transfer>
         </div>
+        
+        <div style="padding: 20px;"></div>
 
         <!-- 调整顺序页面 -->
         <div id="mapMain">
@@ -62,14 +64,21 @@
             <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="180" :max="380" label="输入学时数"></el-input-number>
             <span style="padding-left: 60px;"></span><el-button type="primary">预览课表</el-button>
           </div>
-          
+          <div style="padding: 20px;"></div>
           <div id="mapMain_sub2">
-            <div v-for="table in TableData">
-              <ul>
-                <li v-for="course in table" :key="course.name">
+            <!-- <div id="paperList" v-for="table in TableData"></div> -->
+            <div v-for="table in TableData" id="paperList">
+              <div id="paperOutsideDiv" v-for="course in table" :key="course.name">
+                <!-- <ul>
+                  <li v-for="course in table" :key="course.name">
+                    {{course.name}}
+                  </li>
+                </ul> -->
+                <div id="paper" draggable="true">
                   {{course.name}}
-                </li>
-              </ul>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -93,6 +102,12 @@
       });
     }
 
+
+    // 检查所选课程是否满足依赖关系，将缺失前置课的课程和所缺的课程列出
+    function check(){
+
+    } 
+
     function divideSemester(){
       var TableData = []
       // 复制原始数组
@@ -107,8 +122,6 @@
         })[0])))
       })
       
-
-
       while(tmpMap.length > 0){
         // 挑出所有入度为0的节点
         var ASemester = tmpMap.filter(function(p){
@@ -317,12 +330,12 @@
 <style>
   /* 穿梭框外框 */
   .el-transfer-panel{
-  width: 700px;
-  height: 700px;
+  width: 500px;
+  height: 500px;
   }
   /* 穿梭框内框 */
   .el-transfer-panel__list.is-filterable{
-  height: 700px;
+  height: 500px;
   }
   #uplaod-button{
     flex-direction: row;
@@ -352,6 +365,36 @@
   #mapMain_sub2{
     /* visibility: hidden; */
     display: flex;
+    /* flex-direction: column; */
+    justify-content: center; /* 水平居中 */
+    /* align-items: center;     垂直居中 */
+  }
+  #paperList{
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    border-left: dashed black;
+    /* justify-content: center; 水平居中 */
+    /* align-items: center;     垂直居中 */
+  }
+  #paperList:first-child{
+    flex-direction: column;
+    border-left: none;
+    display: flex;
+    flex: 1;
+    /* justify-content: center; 水平居中 */
+    /* align-items: center;     垂直居中 */
+  }
+  #paperList #paperOutsideDiv{
+    padding: 20px;
+    align-items: center;
+  }
+  #paper{
+    display: flex;
+    border-style: double;
+    border-radius: 10px;
+    border-color: black;
+    padding: 5px;
     justify-content: center; /* 水平居中 */
     align-items: center;     /* 垂直居中 */
   }
