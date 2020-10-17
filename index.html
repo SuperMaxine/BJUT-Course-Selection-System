@@ -10,14 +10,14 @@
     <el-container>
       <el-header>
         <el-row :gutter="20">
-          <el-col :span="18">
+          <el-col :span="17">
             <el-steps :active="active" finish-status="success">
               <el-step title="选课"></el-step>
               <el-step title="安排教学计划"></el-step>
               <el-step title="生成课表"></el-step>
             </el-steps>
           </el-col>
-          <el-col :span="4">
+          <el-col :span="5">
               <el-button-group>
                 <el-button :disabled="frontButton" type="primary" icon="el-icon-arrow-left" @click="front">上一页</el-button>
                 <el-button :disabled="nextButton" type="primary" @click="next">下一页<i class="el-icon-arrow-right el-icon--right"></i>
@@ -32,6 +32,13 @@
       <el-main>
         <!-- 选课页面 -->
         <div id="fltMain">
+          <div id="mapMain_sub1">
+            <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10" label="输入学期数"></el-input-number>
+            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="180" :max="380" label="输入学时数"></el-input-number>
+          </div>
+          
+          <div style="padding: 20px;"></div>
+
           <el-upload
             class="upload-demo"
             action="./"
@@ -44,25 +51,58 @@
               <div slot="tip" class="el-upload__tip" style="padding-left: 10px;"> 选择一个json文件以解析</div>
             </div>
           </el-upload>
+
           <br><br>
-          <el-transfer
+
+          <!-- 穿梭框 -->
+          <!-- <el-transfer
             id="transfer"
             filterable
             filter-placeholder="输入课程关键词以搜索"
             v-model="value"
             :data="datad"
             :titles="flt_titles">
-          </el-transfer>
+          </el-transfer> -->
+
+          <!-- 选课表格 -->
+          <el-table
+            ref="multipleTable"
+            :data="RawMap"
+            stripe
+            tooltip-effect="dark"
+            style="width: 100%"
+            @selection-change="handleSelectionChange">
+
+            <el-table-column type="selection" width="55">
+            </el-table-column>
+
+            <el-table-column
+              prop="name"
+              label="课程名称"
+              width="200"
+              show-overflow-tooltip>
+            </el-table-column>
+
+            <el-table-column
+              prop="time"
+              label="学时"
+              width="80">
+            </el-table-column>
+
+            <el-table-column
+              prop="stringPre"
+              label="前置课程"
+              show-overflow-tooltip>
+          </el-table-column>
+          </el-table>
         </div>
         
-        <div style="padding: 20px;"></div>
 
         <!-- 调整顺序页面 -->
         <div id="mapMain">
           <div id="mapMain_sub1">
             <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10" label="输入学期数"></el-input-number>
             <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="180" :max="380" label="输入学时数"></el-input-number>
-            <span style="padding-left: 60px;"></span><el-button type="primary">预览课表</el-button>
           </div>
           <div style="padding: 20px;"></div>
           <div id="mapMain_sub2">
@@ -95,7 +135,7 @@
 <script>
   function printRawData(){
     vm.RawMap.forEach( course => {
-      console.log("in outside function: "+course.name);
+      console.log(vm.RawMap);
     });
   }
 
@@ -266,6 +306,19 @@
         course.pre = vm.RawMap.filter(function(p){return p.name == course.name})[0].pre;
       })
     })
+
+    if(TableData.length > vm.NumOfSemesters){
+      // 弹出错误提示
+      vm.$notify.error({
+        title: '您学不会啊,',
+        message: "您需要"+TableData.length+"个学期学完所有课程，可是总共只有"+vm.NumOfSemesters+"个学期"
+      });
+      return false;
+    }
+    while(TableData.length < vm.NumOfSemesters){
+      TableData.push([]);
+    }
+
     vm.TableData = JSON.parse(JSON.stringify(TableData));
 
     return true;
@@ -274,7 +327,7 @@
   var vm = new Vue({
     el: '#app',
     data: {
-      flt_titles: ["可选课程","未选课程"],
+      flt_titles: ["可选课程","已选课程"],
       // datad: [{key:1,label:'上海'}, {key:2,label:'北京'}, {key:3,label:'广州'}, {key:4,label:'深圳'}, {key:5,label:'南京'}, {key:6,label:'西安'}, {key:7,label:'成都'}],
       // datad: (function(){
       //   d = [];
@@ -289,6 +342,7 @@
       datad: [],
       RawMap: [],
 
+      multipleSelection: [],
       value: [],
       active: 0,
       frontButton: true,
@@ -331,7 +385,9 @@
                   vm.datad.push({key: course.name});
                   vm.RawMap.push({
                     name: course.name,
+                    time: course.time,
                     pre: course.pre,
+                    stringPre: JSON.stringify(course.pre).slice(1, -1).replaceAll("\"",""),
                     next: []
                   })
                 });
@@ -346,6 +402,8 @@
                 })
                 // 测试外置函数
                 //printRawData();
+
+                // 准备选课列表数据
             },
             error: function(data){
                 alert(JSON.stringify(data));
@@ -427,11 +485,51 @@
       },
 
       SmstNumChange: function(){
-        
+        if(divideSemester() == false && this.active != 0){
+          this.$confirm('此操作会删除超出学期数的学期的课程, 是否继续?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            });
+            while(this.NumOfSemesters < this.TableData.length){
+              this.TableData.pop().forEach( course =>{
+                this.value.splice(this.value.lastIndexOf(course.name), 1);
+
+                this.multipleSelection.filter(function(p){
+                  return p.name == course.name;
+                }).forEach( choosedCourse => {
+                  this.$refs.multipleTable.toggleRowSelection(choosedCourse);
+                });
+              });
+              divideSemester();
+              
+            }
+          }).catch(() => {
+            this.$message({
+              type: 'info',
+              message: '已取消删除'
+            });          
+            this.NumOfSemesters=this.TableData.length;
+          });
+        }
       },
 
       StudyHourChange: function(){
         
+      },
+
+      handleSelectionChange(val) {
+        this.multipleSelection = val;
+        var tmpvalue = [];
+        val.forEach( choosedCourse =>{
+          tmpvalue.push(choosedCourse.name);
+        });
+        vm.value = tmpvalue;
+        // divideSemester();
       }
     },
   })
@@ -486,8 +584,8 @@
     flex: 1;
     flex-direction: column;
     border-left: dashed black;
-    justify-content: center; 水平居中
-    align-items: center;     垂直居中
+    justify-content: center; 
+    align-items: center;     
   }
   #paperList:first-child{
     flex-direction: column;
