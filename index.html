@@ -34,7 +34,7 @@
         <div id="fltMain">
           <div id="mapMain_sub1">
             <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10" label="输入学期数"></el-input-number>
-            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="180" :max="380" label="输入学时数"></el-input-number>
+            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="0" :max="380" label="输入学时数"></el-input-number>
           </div>
           
           <div style="padding: 20px;"></div>
@@ -102,7 +102,7 @@
         <div id="mapMain">
           <div id="mapMain_sub1">
             <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10" label="输入学期数"></el-input-number>
-            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="180" :max="380" label="输入学时数"></el-input-number>
+            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="0" :max="380" label="输入学时数"></el-input-number>
           </div>
           <div style="padding: 20px;"></div>
           <div id="mapMain_sub2">
@@ -126,7 +126,7 @@
 </body>
 
 
-<script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
+<script src="https://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
 <!-- import Vue before Element -->
 <script src="https://unpkg.com/vue/dist/vue.js"></script>
 <!-- import JavaScript -->
@@ -353,6 +353,7 @@
 
       NumOfSemesters: 8,
       StudyHour: 280,
+      TotalStudyHour: 0,
 
       Semester: [],
       TableData: []
@@ -370,16 +371,16 @@
         //获取后缀
         var ext = filePath.substr(index+1);
         //输出结果
-        // console.log(ext);
+        console.log(ext);
         if(ext=="json"){
-          // console.log(file.path);
+          console.log(file.path);
           $.ajax({
             type:'get',
             url:file.path,
             dataType:"json",
             success: function(data){
                 // 获取json
-                // console.log(data);
+                console.log(data);
                 // 将json传送给内置变量
                 data.courses.forEach(course => {
                   vm.datad.push({key: course.name});
@@ -421,6 +422,13 @@
       next: function(){
         // 刷新课程拓扑排序
         if(divideSemester() == false)return;
+        if(vm.TotalStudyHour > vm.StudyHour * vm.NumOfSemesters){
+          vm.$notify.error({
+            title: '超过总学时数',
+            message: '总学时数'+(vm.StudyHour * vm.NumOfSemesters)+'，已选课程学时数'+(vm.TotalStudyHour)+'，超过'+(vm.TotalStudyHour - vm.StudyHour * vm.NumOfSemesters)+'学时'
+          });
+          return;
+        }
 
         var a = document.getElementById("fltMain");
         var b = document.getElementById("mapMain");
@@ -518,16 +526,35 @@
         }
       },
 
-      StudyHourChange: function(){
-        
+      StudyHourChange: function(value){
+        StudyHour = value;
+        // console.log(StudyHour);
+
+      },
+
+      StudyHourCheck: function(){
+        var i = 0;
+        vm.TableData.forEach( SmsCourses =>{
+
+        }
+        )
       },
 
       handleSelectionChange(val) {
         this.multipleSelection = val;
         var tmpvalue = [];
+        var TotalStudyHour = parseInt(0);
         val.forEach( choosedCourse =>{
           tmpvalue.push(choosedCourse.name);
+          TotalStudyHour = TotalStudyHour + parseInt(choosedCourse.time);          
         });
+        if(TotalStudyHour > vm.StudyHour * vm.NumOfSemesters){
+          vm.$notify.error({
+            title: '超过总学时数',
+            message: '总学时数'+(vm.StudyHour * vm.NumOfSemesters)+'，已选课程学时数'+(TotalStudyHour)+'，超过'+(TotalStudyHour - vm.StudyHour * vm.NumOfSemesters)+'学时'
+          });
+        }
+        vm.TotalStudyHour = TotalStudyHour;
         vm.value = tmpvalue;
         // divideSemester();
       }
