@@ -107,10 +107,11 @@
           <div style="padding: 20px;"></div>
           <div id="mapMain_sub2">
             <!-- <div id="paperList" v-for="table in TableData"></div> -->
-            <div v-for="table in TableData" id="paperList">
+            <div v-for="table in TableData" id="paperList" name="paperList">
               <div id="paperOutsideDiv" v-for="course in table" :key="course.name">
                 <div id="paper" draggable="true">
-                  {{course.name}}
+                  {{course.name}}<br>
+                  {{course.time}}学时
                 </div>
               </div>
 
@@ -220,6 +221,23 @@
       });
       return false;
     }
+  }
+
+  function checkSmsStudyHour(){
+    var i = 0;
+    vm.TableData.forEach( SmsCourses =>{
+      var ASmsStudyHour = 0;
+      SmsCourses.forEach( ACourse=>{
+        ASmsStudyHour += parseInt(ACourse.time);
+      })
+      // console.log(ASmsStudyHour);
+      if(ASmsStudyHour > vm.StudyHour){
+        document.getElementsByName("paperList")[i].style.background='red';
+      }else{
+        document.getElementsByName("paperList")[i].style.background='';
+      }
+      i += 1;
+    })
   }
 
   function divideSemester(){
@@ -429,6 +447,7 @@
           });
           return;
         }
+        checkSmsStudyHour();
 
         var a = document.getElementById("fltMain");
         var b = document.getElementById("mapMain");
@@ -530,14 +549,7 @@
         StudyHour = value;
         // console.log(StudyHour);
 
-      },
-
-      StudyHourCheck: function(){
-        var i = 0;
-        vm.TableData.forEach( SmsCourses =>{
-
-        }
-        )
+        checkSmsStudyHour();
       },
 
       handleSelectionChange(val) {
@@ -634,6 +646,7 @@
     padding: 5px;
     justify-content: center; /* 水平居中 */
     align-items: center;     /* 垂直居中 */
+    background: #ffffff;
   }
   #showMain{
     visibility: hidden;
