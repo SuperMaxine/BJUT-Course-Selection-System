@@ -225,6 +225,7 @@
 
   function checkSmsStudyHour(){
     var i = 0;
+    var tmpEver = true;
     vm.TableData.forEach( SmsCourses =>{
       var ASmsStudyHour = 0;
       SmsCourses.forEach( ACourse=>{
@@ -233,11 +234,14 @@
       // console.log(ASmsStudyHour);
       if(ASmsStudyHour > vm.StudyHour){
         document.getElementsByName("paperList")[i].style.background='red';
+        tmpEver=false;
       }else{
         document.getElementsByName("paperList")[i].style.background='';
       }
       i += 1;
     })
+    if(tmpEver)vm.EverySmsSatisfyStudyHour=true;
+    else vm.EverySmsSatisfyStudyHour=false;
   }
 
   function divideSemester(){
@@ -374,7 +378,9 @@
       TotalStudyHour: 0,
 
       Semester: [],
-      TableData: []
+      TableData: [],
+
+      EverySmsSatisfyStudyHour: false
 
     },
     methods: {
