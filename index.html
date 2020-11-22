@@ -93,8 +93,18 @@
               prop="stringPre"
               label="前置课程"
               show-overflow-tooltip>
-          </el-table-column>
+            </el-table-column>
+
+            <!-- <el-table-column
+              align="right">
+              <template slot="header" slot-scope="scope">
+                <el-button @click="showTPGraph">生成拓扑图片</el-button>
+              </template>
+            </el-table-column> -->
           </el-table>
+
+
+          <div id="mountNode"></div>
         </div>
         
 
@@ -126,7 +136,8 @@
   </div>
 </body>
 
-
+<script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.7.1/dist/g6.min.js"></script>
+<!-- Antv-G6 -->
 <script src="https://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
 <!-- import Vue before Element -->
 <script src="https://unpkg.com/vue/dist/vue.js"></script>
@@ -389,7 +400,12 @@
       Semester: [],
       TableData: [],
 
-      EverySmsSatisfyStudyHour: false
+      EverySmsSatisfyStudyHour: false,
+
+      GraphData: {
+        nodes: [],
+        edges: []
+      }
 
     },
     methods: {
@@ -437,7 +453,14 @@
                 // 测试外置函数
                 //printRawData();
 
-                // 准备选课列表数据
+                // 准备拓扑图数据
+                data.courses.forEach( course => {
+                  vm.GraphData.nodes.push({id:course.name,label:course.name});
+                  course.pre.forEach( precourse => {
+                    vm.GraphData.edges.push({source:course.name,target:precourse});
+                  })
+                })
+                vm.showTPGraph();
             },
             error: function(data){
                 alert(JSON.stringify(data));
@@ -579,9 +602,27 @@
         vm.TotalStudyHour = TotalStudyHour;
         vm.value = tmpvalue;
         // divideSemester();
-      }
+      },
+
+      showTPGraph(){
+        // 读取数据
+        graph.data(vm.GraphData);
+        // 渲染图
+        graph.render();
+      },
+
     },
   })
+
+  const graph = new G6.Graph({
+    container: 'mountNode', // String | HTMLElement，必须，在 Step 1 中创建的容器 id 或容器本身
+    width: 500, // Number，必须，图的宽度
+    height: 5000, // Number，必须，图的高度
+    layout: {
+      type: 'dagre',
+      preventOverlap: true, // 防止节点重叠
+    },
+  });
 </script>
 
 
