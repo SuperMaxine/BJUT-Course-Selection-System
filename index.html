@@ -224,6 +224,15 @@
   }
 
   function checkSmsStudyHour(){
+    var SmsCheck = true;
+    if(vm.TotalStudyHour > vm.StudyHour * vm.NumOfSemesters){
+      vm.$notify.error({
+        title: '超过总学时数',
+        message: '总学时数'+(vm.StudyHour * vm.NumOfSemesters)+'，已选课程学时数'+(vm.TotalStudyHour)+'，超过'+(vm.TotalStudyHour - vm.StudyHour * vm.NumOfSemesters)+'学时'
+      });
+      SmsCheck = false;
+    }
+    vm.minStudyHour = vm.TotalStudyHour / vm.NumOfSemesters;
     var i = 0;
     var tmpEver = true;
     vm.TableData.forEach( SmsCourses =>{
@@ -549,12 +558,12 @@
             this.NumOfSemesters=this.TableData.length;
           });
         }
+        checkSmsStudyHour();
       },
 
       StudyHourChange: function(value){
         StudyHour = value;
         // console.log(StudyHour);
-
         checkSmsStudyHour();
       },
 
@@ -566,12 +575,7 @@
           tmpvalue.push(choosedCourse.name);
           TotalStudyHour = TotalStudyHour + parseInt(choosedCourse.time);          
         });
-        if(TotalStudyHour > vm.StudyHour * vm.NumOfSemesters){
-          vm.$notify.error({
-            title: '超过总学时数',
-            message: '总学时数'+(vm.StudyHour * vm.NumOfSemesters)+'，已选课程学时数'+(TotalStudyHour)+'，超过'+(TotalStudyHour - vm.StudyHour * vm.NumOfSemesters)+'学时'
-          });
-        }
+        checkSmsStudyHour();
         vm.TotalStudyHour = TotalStudyHour;
         vm.value = tmpvalue;
         // divideSemester();
