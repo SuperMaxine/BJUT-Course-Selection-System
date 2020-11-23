@@ -563,16 +563,19 @@
                     })
                   }
                 })
+                vm.RawMap.sort(function(a,b){return a.name.localeCompare(b.name)});
                 // 测试外置函数
                 //printRawData();
 
                 // 准备拓扑图数据
                 data.courses.forEach( course => {
                   vm.GraphData.nodes.push({id:course.name,label:course.name});
+                  if(course.pre.length == 0)vm.GraphData.edges.push({source:"无",target:course.name});
                   course.pre.forEach( precourse => {
-                    vm.GraphData.edges.push({source:course.name,target:precourse});
+                    vm.GraphData.edges.push({source:precourse,target:course.name});
                   })
                 })
+                vm.GraphData.nodes.push({id:"无",label:"无"});
                 vm.showTPGraph();
             },
             error: function(data){
@@ -590,7 +593,6 @@
 
       next: function(){
         // 刷新课程拓扑排序
-        if(vm.active==0&&divideSemester() == false)return;
         if(vm.TotalStudyHour > vm.StudyHour * vm.NumOfSemesters){
           vm.$notify.error({
             title: '超过总学时数',
@@ -598,6 +600,7 @@
           });
           return;
         }
+        if(vm.active==0&&divideSemester() == false)return;
         checkSmsStudyHour();
 
         var a = document.getElementById("fltMain");
