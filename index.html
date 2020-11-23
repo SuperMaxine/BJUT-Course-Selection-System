@@ -117,9 +117,10 @@
           <div style="padding: 20px;"></div>
           <div id="mapMain_sub2">
             <!-- <div id="paperList" v-for="table in TableData"></div> -->
-            <div v-for="table in TableData" id="paperList" name="paperList">
+            <div v-for="(table, index) in TableData" id="paperList" name="paperList" ondrop="drop(event)" ondragover="allowDrop(event)">
+              <div id="paper" style="background: yellowgreen">第{{index + 1}}学期</div>
               <div id="paperOutsideDiv" v-for="course in table" :key="course.name">
-                <div id="paper" draggable="true">
+                <div id="paper" draggable="true" draggable="true" ondragstart="drag(event)">
                   {{course.name}}<br>
                   {{course.time}}学时
                 </div>
@@ -145,9 +146,131 @@
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 <!-- Vue脚本 -->
 <script>
+  function allowDrop(ev) {
+    ev.preventDefault();
+  }
+
+  function drag(ev) {
+    // ev.dataTransfer.setData("text", ev.target.id);
+    ev.dataTransfer.setData("text", $(ev.target).html().split('<br>')[0].replace(/^\s*/,""));
+  }
+
+  function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    // 寻找自己是tabledata中的第几列
+    var targetColIndex = parseInt($(ev.target).text().replace("第","").replace("学期",""))-1
+
+    // 拷贝tabledata
+    var tmpMap = [];
+    vm.TableData.forEach( tmpCol => {
+      tmpMap.push(JSON.parse(JSON.stringify(tmpCol)));
+    });
+
+    // 从tabledata中寻找被拖动的元素
+    var sourceColIndex = 0;
+    vm.TableData.forEach( col => {
+      col.forEach( course => {
+        if(course.name == data){
+          var theCourse = course;
+          var offset = targetColIndex - sourceColIndex;
+
+          // 找到被拖动的课程后，检查是否可以向目标列拖放
+          // 查找课程col里的索引，向目标列添加元素，并通过索引从原列删除元素
+          tmpMap[targetColIndex].push(theCourse);
+          tmpMap[sourceColIndex].splice(col.lastIndexOf(course),1);
+
+          // 把后置课程移动到恰当位置
+          // 把theCourse所有的后置课程放在一个数组中
+          var tmpAll = [];
+          var tmpQueue = [];
+          tmpQueue.push(theCourse);
+          while(tmpQueue.length != 0){
+            tmpQueue[0].next.forEach( nextCourse => {
+              tmpnextCourse = vm.RawMap.filter(function(p){return p.name == nextCourse;})[0];
+              if(tmpAll.lastIndexOf(tmpAll.filter(function(p){return p.name == nextCourse;})[0])==-1)tmpQueue.push(tmpnextCourse);
+            });
+            tmpAll.push(JSON.parse(JSON.stringify(tmpQueue[0])));
+            tmpQueue.shift();
+          }
+          // 对tmpAll进行拓扑排序
+          tmpQueue = tmpAll;
+          tmpAll = [];
+          // 计算每个节点的入度
+          tmpQueue.forEach( calcRD1=>{
+            var RD = 0;
+            calcRD1.pre.forEach(calcRDpre=>{
+              if(tmpQueue.filter(function(p){return p.name == calcRDpre}).length!=0)RD++;
+            });
+            calcRD1.RD=RD;
+          });
+          var RD0Course = tmpQueue.filter(function(p){return p.RD==0})[0]
+          RD0Course.next.forEach(pNext=>{tmpQueue.filter(function(p){return p.name==pNext}).forEach(pp=>{pp.RD--;});})
+          tmpQueue.splice(tmpQueue.lastIndexOf(RD0Course),1);
+          while(tmpQueue.length!=0){
+            RD0Course = tmpQueue.filter(function(p){return p.RD==0})[0]
+            tmpAll.push(RD0Course);
+            RD0Course.next.forEach(pNext=>{tmpQueue.filter(function(p){return p.name==pNext}).forEach(pp=>{pp.RD--;});})
+            tmpQueue.splice(tmpQueue.lastIndexOf(RD0Course),1);
+          }
+
+          // 检查所有后置课程是否满足各自的前置课程，不满足的向后移动到满足为止
+          tmpAll.forEach(tailCourse=>{
+            var tmpall = [tailCourse];
+            var problemCol = tmpMap.filter(function(pCol){return pCol.filter(function(pCourse){return pCourse.name == tailCourse.name}).length!=0})[0];
+            for(var i = 0; i < tmpMap.lastIndexOf(problemCol); i++){tmpMap[i].forEach( HeadCourse => {tmpall.push(HeadCourse);})}
+            while(headCheck(tmpall,false)!=true){
+              if(tmpMap.lastIndexOf(problemCol) + 1 >= tmpMap.length)tmpMap.push([]);
+              tmpMap[tmpMap.lastIndexOf(problemCol) + 1].push(tailCourse);
+              tmpMap[tmpMap.lastIndexOf(problemCol)].splice((problemCol.lastIndexOf(problemCol.filter(function(pCourse){return pCourse.name == tailCourse.name})[0])),1);
+              tmpall = [tailCourse];
+              problemCol = tmpMap.filter(function(pCol){return pCol.filter(function(pCourse){return pCourse.name == tailCourse.name}).length!=0})[0];
+              for(var i = 0; i < tmpMap.lastIndexOf(problemCol); i++){tmpMap[i].forEach( HeadCourse => {tmpall.push(HeadCourse);})}
+            }
+          });
+
+          // 检查是否可以移动
+          if(checkACourse(tmpMap, theCourse) == false)return false;
+
+          vm.TableData = JSON.parse(JSON.stringify(tmpMap));
+          checkSmsStudyHour();
+          return
+        }
+      })
+      sourceColIndex++;
+    })
+
+  }
+
+  function checkACourse(table, theCourse){
+    var state;
+    table.forEach( col => {
+      col.forEach( course => {
+        if(course.name == theCourse.name){
+          // 查找前置课程是否满足要求
+          var allPreCourse = [];
+          for(var i = 0; i < table.lastIndexOf(col); i++){
+            table[i].forEach( precourse => {
+              allPreCourse.push(precourse);
+            })
+          }
+          allPreCourse.push(theCourse);
+          // if(!headCheck(allPreCourse))return false;
+
+          // 查找后置课程是否不超出长度
+          //console.log(headCheck(allPreCourse, true));
+          if(headCheck(allPreCourse, true)==false||tailCheck(table)==false)state = false;
+          else state = true;
+          return state;
+        }
+      })
+    })
+    return state;
+  }
+
   function printRawData(){
     vm.RawMap.forEach( course => {
-      console.log(vm.RawMap);
+      //console.log(vm.RawMap);
     });
   }
 
@@ -161,77 +284,6 @@
     c.style.display="none";
     vm.frontButton = true;
     vm.nextButton = false;
-  }
-
-
-  // 检查所选课程是否满足依赖关系，将缺失前置课的课程和所缺的课程列出
-  function check(){
-    alreadyHavePreCourse = [];
-    warningArray = [];
-    // 遍历每一列的课程数组
-    vm.TableData.forEach( colCourse => {
-      console.log("遍历每一列的课程数组:");
-      console.log(colCourse);
-      // 遍历这一列的每一个课程
-      colCourse.forEach( course => {
-        console.log("遍历这一列的每一个课程");
-        console.log(course);
-        // 遍历这个课程的每一个前置课程
-        course.pre.forEach( precourse => {
-          console.log("遍历这个课程的每一个前置课程");
-          console.log(precourse);
-
-          // 如果这个前置课程之前没学过，加入警告数组
-          console.log("如果这个前置课程之前没学过，加入警告数组");
-          if(alreadyHavePreCourse.lastIndexOf(precourse) == -1){
-            console.log("alreadyHavePreCourse.lastIndexOf(precourse) == " + alreadyHavePreCourse.lastIndexOf(precourse));
-            // 警告数组中如果已经存在此时所检查的课程，直接在pre数组中添加
-            console.log("警告数组中如果已经存在此时所检查的课程，直接在pre数组中添加")
-            var warningCourse = warningArray.filter(function(p){
-              return p.name == course.name;
-            });
-            console.log("warningCourse.length = " + warningCourse.length)
-            if(warningCourse.length > 0){
-              warningCourse[0].pre.push(precourse);
-            }else{
-              // 如果还没有此时检查的课程，则向警告数组添加一个对象
-              warningArray.push({
-                name: course.name,
-                pre: [precourse]
-              });
-            }
-          }
-        });
-      });
-
-      // 这一列的所有课程加入已经学过的课程
-      colCourse.forEach( course =>{
-        alreadyHavePreCourse.push(course.name);
-      });
-
-    })
-    
-    console.log(warningArray)
-
-    if(warningArray.length == 0)return true;
-    else {
-      var warningMessage = "";
-      warningArray.forEach( warningCourse =>{
-        warningMessage = warningMessage + "您所选的课程<strong>" + warningCourse.name + "</strong>还需要前置课程:<ol>"
-        warningCourse.pre.forEach( warningPreCourse => {
-          warningMessage = warningMessage + "<li>" + warningPreCourse +"</li>"
-        })
-        warningMessage = warningMessage + "</ol>"
-      })
-      // 弹出错误提示
-      vm.$notify.error({
-        title: '您学不会啊',
-        dangerouslyUseHTMLString: true,
-        message: warningMessage,
-        duration: 0
-      });
-      return false;
-    }
   }
 
   function checkSmsStudyHour(){
@@ -251,7 +303,6 @@
       SmsCourses.forEach( ACourse=>{
         ASmsStudyHour += parseInt(ACourse.time);
       })
-      // console.log(ASmsStudyHour);
       if(ASmsStudyHour > vm.StudyHour){
         document.getElementsByName("paperList")[i].style.background='red';
         tmpEver=false;
@@ -264,23 +315,12 @@
     else vm.EverySmsSatisfyStudyHour=false;
   }
 
-  function divideSemester(){
-    var TableData = []
-    // 复制原始数组
-    // var tmpMap = vm.RawMap;
-    var tmpMap = [];
-    // vm.RawMap.forEach( course => {
-    //   tmpMap.push(course);
-    // });
-    vm.value.forEach( choosedCourse => {
-      tmpMap.push(JSON.parse(JSON.stringify(vm.RawMap.filter(function(p){
-        return p.name == choosedCourse;
-      })[0])))
-    })
-
+  function headCheck(tmpMap, warning){
+    //console.log(tmpMap);
     // 判断能否进行拓扑排序
     var warningArray = [];
     tmpMap.forEach( course => {
+      // console.log(course);
       course.pre.forEach( precourse => {
         var courseInTmpMap = tmpMap.filter(function(p){return p.name == precourse;});
 
@@ -297,25 +337,60 @@
         }
       })
     })
+    //console.log(warningArray, warning);
     if(warningArray.length > 0){
-      var warningMessage = "";
-      warningArray.forEach( warningCourse =>{
-        warningMessage = warningMessage + "您所选的课程<strong>" + warningCourse.name + "</strong>还需要前置课程:<ol>"
-        warningCourse.pre.forEach( warningPreCourse => {
-          warningMessage = warningMessage + "<li>" + warningPreCourse +"</li>"
+      if(warning==true){
+        var warningMessage = "";
+        warningArray.forEach( warningCourse =>{
+          warningMessage = warningMessage + "您所选的课程<strong>" + warningCourse.name + "</strong>还需要前置课程:<ol>"
+          warningCourse.pre.forEach( warningPreCourse => {
+            warningMessage = warningMessage + "<li>" + warningPreCourse +"</li>"
+          })
+          warningMessage = warningMessage + "</ol>"
         })
-        warningMessage = warningMessage + "</ol>"
-      })
+        // 弹出错误提示
+        vm.$notify.error({
+          title: '您学不会啊',
+          dangerouslyUseHTMLString: true,
+          message: warningMessage,
+          duration: 0
+        });
+        return false;
+      }else{
+        return warningArray;
+      }
+    }
+
+    return true;
+  }
+
+  function tailCheck(TableData){
+    if(TableData.length > vm.NumOfSemesters){
       // 弹出错误提示
       vm.$notify.error({
-        title: '您学不会啊',
-        dangerouslyUseHTMLString: true,
-        message: warningMessage,
-        duration: 0
+        title: '您学不会啊,',
+        message: "您需要"+TableData.length+"个学期学完所有课程，可是总共只有"+vm.NumOfSemesters+"个学期"
       });
       return false;
     }
+    return true;
+  }
 
+  function divideSemester(){
+    var TableData = []
+    // 复制原始数组
+    // var tmpMap = vm.RawMap;
+    var tmpMap = [];
+    // vm.RawMap.forEach( course => {
+    //   tmpMap.push(course);
+    // });
+    vm.value.forEach( choosedCourse => {
+      tmpMap.push(JSON.parse(JSON.stringify(vm.RawMap.filter(function(p){
+        return p.name == choosedCourse;
+      })[0])))
+    })
+
+    if(!headCheck(tmpMap,true))return false;
 
     // 拓扑排序子集划分
     while(tmpMap.length > 0){
@@ -349,14 +424,8 @@
       })
     })
 
-    if(TableData.length > vm.NumOfSemesters){
-      // 弹出错误提示
-      vm.$notify.error({
-        title: '您学不会啊,',
-        message: "您需要"+TableData.length+"个学期学完所有课程，可是总共只有"+vm.NumOfSemesters+"个学期"
-      });
-      return false;
-    }
+    if(!tailCheck(TableData))return false;
+
     while(TableData.length < vm.NumOfSemesters){
       TableData.push([]);
     }
@@ -413,23 +482,26 @@
 
       },
       upload: function(file){
-        // console.log(file);
+        //console.log(file);
         var filePath=file.path;
         //获取最后一个.的位置
         var index= filePath.lastIndexOf(".");
         //获取后缀
         var ext = filePath.substr(index+1);
         //输出结果
-        console.log(ext);
+        //console.log(ext);
         if(ext=="json"){
-          console.log(file.path);
+          //console.log(file.path);
           $.ajax({
             type:'get',
             url:file.path,
             dataType:"json",
             success: function(data){
+                vm.RawMap = [];
+                vm.TableData = [];
+                vm.GraphData = {nodes: [],edges: []}
                 // 获取json
-                console.log(data);
+                //console.log(data);
                 // 将json传送给内置变量
                 data.courses.forEach(course => {
                   vm.datad.push({key: course.name});
@@ -445,7 +517,7 @@
                 data.courses.forEach(course => {
                   if(course.pre.length != 0){
                     course.pre.forEach( precourse => {
-                      // console.log(precourse);
+                      //console.log(precourse);
                       vm.RawMap[vm.RawMap.lastIndexOf(vm.RawMap.filter(function(p){return p.name===precourse})[0])].next.push(course.name);
                     })
                   }
@@ -586,7 +658,7 @@
 
       StudyHourChange: function(value){
         StudyHour = value;
-        // console.log(StudyHour);
+        //console.log(StudyHour);
         checkSmsStudyHour();
       },
 
@@ -674,7 +746,7 @@
     flex: 1;
     flex-direction: column;
     border-left: dashed black;
-    justify-content: center; 
+    /* justify-content: center;  */
     align-items: center;     
   }
   #paperList:first-child{
