@@ -33,8 +33,8 @@
         <!-- 选课页面 -->
         <div id="fltMain">
           <div id="mapMain_sub1">
-            <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10" label="输入学期数"></el-input-number>
-            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="0" :max="380" label="输入学时数"></el-input-number>
+            <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10000" label="输入学期数"></el-input-number>
+            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="0" :max="10000" label="输入学时数"></el-input-number>
           </div>
           
           <div style="padding: 20px;"></div>
@@ -122,8 +122,8 @@
         <!-- 调整顺序页面 -->
         <div id="mapMain">
           <div id="mapMain_sub1">
-            <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10" label="输入学期数"></el-input-number>
-            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="0" :max="380" label="输入学时数"></el-input-number>
+            <div>输入学期数<span style="padding-left: 10px;"></span></span></div><el-input-number v-model="NumOfSemesters" @change="SmstNumChange" :min="1" :max="10000" label="输入学期数"></el-input-number>
+            <div><span style="padding-left: 30px;">学期总学时数<span style="padding-left: 10px;"></span></div><el-input-number v-model="StudyHour" @change="StudyHourChange" :min="0" :max="10000" label="输入学时数"></el-input-number>
           </div>
           <div style="padding: 20px;"></div>
           <div id="mapMain_sub2">
