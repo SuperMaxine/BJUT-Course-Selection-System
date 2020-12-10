@@ -262,8 +262,8 @@
             while(headCheck(tmpall,false)!=true){
               if(tmpMap.lastIndexOf(problemCol) + 1 >= tmpMap.length)tmpMap.push([]);
               tmpMap[tmpMap.lastIndexOf(problemCol) + 1].push(tailCourse);
-              console.log(tailCourse);
-              console.log(problemCol)
+              // console.log(tailCourse);
+              // console.log(problemCol)
               tmpMap[tmpMap.lastIndexOf(problemCol)].splice((problemCol.lastIndexOf(problemCol.filter(function(pCourse){return pCourse.name == tailCourse.name})[0])),1);
               tmpall = [tailCourse];
               problemCol = tmpMap.filter(function(pCol){return pCol.filter(function(pCourse){return pCourse.name == tailCourse.name}).length!=0})[0];
@@ -431,7 +431,7 @@
     if(!headCheck(tmpMap,true))return false;
 
     for(var i = 0; i < vm.NumOfSemesters; i++){
-      TableData.push(vm.RawMap.filter(function(p){return p.zjs==i;}))
+      TableData.push(tmpMap.filter(function(p){return p.zjs==i;}))
     }
 
     vm.TableData = JSON.parse(JSON.stringify(TableData));
@@ -570,6 +570,7 @@
           });
           return;
         }
+        // console.log(vm.value);
         if(vm.active==0&&divideSemester() == false)return;
         checkSmsStudyHour();
 
@@ -636,7 +637,14 @@
       },
 
       SmstNumChange: function(){
-        if(divideSemester() == false && this.active != 0){
+        var len;
+        // console.log(this.TableData);
+        while(this.TableData.length < this.NumOfSemesters){
+          this.TableData.push([]);
+          // console.log(this.TableData);
+        }
+        for(len = this.TableData.length; this.TableData[len-1].length == 0; len--);
+        if(this.NumOfSemesters < len && this.active != 0){
           this.$confirm('此操作会删除超出学期数的学期的课程, 是否继续?', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
@@ -666,6 +674,19 @@
             });          
             this.NumOfSemesters=this.TableData.length;
           });
+        } else {
+          while(this.NumOfSemesters < this.TableData.length){
+            this.TableData.pop().forEach( course =>{
+              this.value.splice(this.value.lastIndexOf(course.name), 1);
+
+              this.multipleSelection.filter(function(p){
+                return p.name == course.name;
+              }).forEach( choosedCourse => {
+                this.$refs.multipleTable.toggleRowSelection(choosedCourse);
+              });
+            });
+            divideSemester();
+          }
         }
         checkSmsStudyHour();
       },
